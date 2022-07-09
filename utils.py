@@ -1,16 +1,17 @@
+import enum
 from member import Member
-from typing import List
+
 import json
 
 
 from exceptions import PasswordIncorrectError, MemberNotFoundError
 
 
-def validate_credentials(
-    email: str, password: str, membersList: List[Member]
-) -> Member:
+def validate_credentials(email: str, password: str) -> Member:
 
     member_found = None
+
+    membersList = get_db()
 
     # validate user credentials
     for member in membersList:
@@ -58,27 +59,48 @@ def get_db():
 
     try:
         with open("db.json") as db:
-            return json.load(db)
+            data = json.load(db)
+            return [Member(**json.loads(member)) for member in data]
 
     except FileNotFoundError:
         return []
 
 
-# save to json
-def save_to_db(member):
-
-    # get json db
-    membersList = get_db()
-
-    membersList.append(member.toJSON())
-
-    # # serialize members dict
+def save(membersList):
+    # serialize members dict
     members_obj = json.dumps(membersList)
 
     with open("db.json", "w") as db:
         db.write(members_obj)
 
 
-data = [Member(**json.loads(member)) for member in get_db()]
+# save to json
+def save_to_db(member: Member, edit: bool, db=None):
 
-print(data)
+    # get json db
+    membersList = get_db() if db is None else db
+
+    if not edit:
+
+        membersList.append(member.toJSON())
+
+        save(membersList)
+        return member
+
+    else:
+        for index, _member in enumerate(membersList):
+            if _member.id == member.id:
+                membersList.pop(index)
+
+        save_to_db(member, edit=False, db=membersList)
+
+
+def delete_user(member: Member):
+
+    db = get_db()
+
+    for index, _member in enumerate(db):
+        if _member.id == member.id:
+            db.pop(index)
+
+    save(db)
