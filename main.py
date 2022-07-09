@@ -76,9 +76,11 @@ def delete_user_account(member: Member):
     try:
         delete_user(member)
     except:
-        print('something went wrong')
+        print("something went wrong")
     else:
+        print("Account successfully deleted.")
         menu()
+
 
 def edit_user_details(member):
 
@@ -98,7 +100,8 @@ def edit_user_details(member):
     member.last_name = last_name
     member.email = email
 
-    save_to_db(member=member, edit=True)
+    member = save_to_db(member=member, edit=True)
+    membersMenu(member)
 
 
 def register():
